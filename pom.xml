@@ -78,6 +78,16 @@ limitations under the License.
             <artifactId>cron-utils</artifactId>
             <version>3.1.6</version>
         </dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.31</version>
+		</dependency>
+		<dependency>
+			<groupId>p6spy</groupId>
+			<artifactId>p6spy</artifactId>
+			<version>1.3</version>
+		</dependency>
     </dependencies>
     <build>
         <finalName>spring-batch-quartz-admin</finalName>

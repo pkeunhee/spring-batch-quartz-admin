@@ -22,7 +22,7 @@
                 <value>classpath:/org/springframework/batch/admin/bootstrap/batch.properties
                 </value>
                 <value>classpath:batch-default.properties</value>
-                <value>classpath:batch-hsql.properties</value>
+                <value>classpath:batch-mysql.properties</value>
                 <value>classpath:log4j.properties</value>
             </list>
         </property>
@@ -35,7 +35,7 @@
     <!-- Overrider job repository -->
     <bean id="jobRepository"
           class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
-        <property name="databaseType" value="hsql"/>
+        <property name="databaseType" value="mysql"/>
         <property name="dataSource" ref="dataSource"/>
         <property name="tablePrefix" value="${batch.table.prefix}"/>
         <property name="maxVarCharLength" value="2000"/>
