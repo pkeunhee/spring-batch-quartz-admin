@@ -18,6 +18,9 @@ package org.springframework.batch.admin.web.service.impl;
 import com.cronutils.descriptor.CronDescriptor;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+
+import kr.ghp.batch.dao.BatchDAO;
+
 import org.quartz.*;
 import org.springframework.batch.admin.web.JobLauncherDetails;
 import org.springframework.batch.admin.web.domain.BatchJobDataStore;
@@ -46,117 +49,120 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Component
 @Qualifier("quartzService")
 public class QuartzServiceImpl implements QuartzService {
+	@Autowired
+	private BatchDAO batchDAO;
 
-    /**
-     * Scheduler instance
-     */
-    @Autowired
-    private SchedulerFactoryBean schedulerFactory;
+	/**
+	 * Scheduler instance
+	 */
+	@Autowired
+	private SchedulerFactoryBean schedulerFactory;
 
-    /**
-     *
-     * @param jobName
-     * @param cronExpression
-     * @param jobDataMap
-     */
-    public void scheduleBatchJob(String jobName, String cronExpression, Map<String, Object> jobDataMap) {
+	/**
+	 *
+	 * @param jobName
+	 * @param cronExpression
+	 * @param jobDataMap
+	 */
+	public void scheduleBatchJob(String jobName, String cronExpression, Map<String, Object> jobDataMap) {
 
-        JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
-        JobDetail jobDetail = JobBuilder.newJob(JobLauncherDetails.class).withIdentity(jobName, Constants.QUARTZ_GROUP).build();
+		JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
 
-        Trigger trigger = TriggerBuilder.newTrigger().withIdentity(Util.getTriggerName(jobName), Constants.QUARTZ_GROUP).withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
+		JobDetail jobDetail = JobBuilder.newJob(JobLauncherDetails.class).withIdentity(jobName, Constants.QUARTZ_GROUP).build();
 
-        // Storing the details
-        BatchJobDataStore batchJobDataStore = (BatchJobDataStore) AppContext.getApplicationContext().getBean(Constants.JOB_DATASTORE_BEAN);
-        Map<String, Map<String, Object>> jobDataMapStore = batchJobDataStore.getJobDataMapStore();
-        jobDataMapStore.put(jobName, jobDataMap);
+		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(Util.getTriggerName(jobName), Constants.QUARTZ_GROUP).withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
 
-        try {
+		// Storing the details
+		BatchJobDataStore batchJobDataStore = (BatchJobDataStore) AppContext.getApplicationContext().getBean(Constants.JOB_DATASTORE_BEAN);
+		Map<String, Map<String, Object>> jobDataMapStore = batchJobDataStore.getJobDataMapStore();
+		jobDataMapStore.put(jobName, jobDataMap);
 
-            // Delete job, if existing
-            if (schedulerFactory.getScheduler().checkExists(jobKey)) {
-                schedulerFactory.getScheduler().deleteJob(jobKey);
-            }
+		try {
 
-            // Schedule job
-            schedulerFactory.getScheduler().scheduleJob(jobDetail, trigger);
-            
-            //cron express 저장
-            
+			// Delete job, if existing
+			if (schedulerFactory.getScheduler().checkExists(jobKey)) {
+				schedulerFactory.getScheduler().deleteJob(jobKey);
+			}
 
-            BatchAdminLogger.getLogger().info("Job is scheduled");
-        } catch (SchedulerException e) {
-            BatchAdminLogger.getLogger().error(e.getMessage(), e);
-        }
-    }
+			// Schedule job
+			schedulerFactory.getScheduler().scheduleJob(jobDetail, trigger);
 
-    /**
-     *
-     * @param jobName
-     * @return String
-     */
-    public String getScheduledJobDescription(String jobName) {
-        String message = Constants.JOB_IS_NOT_SCHEDULED;
-        JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
-        try {
-            JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
-            if (null != jobDetail) {
-                List<? extends Trigger> triggersOfJob = schedulerFactory.getScheduler().getTriggersOfJob(jobKey);
-                if (null != triggersOfJob && !triggersOfJob.isEmpty()) {
-                    CronTrigger trigger = (CronTrigger) triggersOfJob.get(0);
-                    String cronExpression = trigger.getCronExpression();
-                    CronDescriptor descriptor = CronDescriptor.instance(Locale.US);
-                    CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(QUARTZ));
-                    message = descriptor.describe(parser.parse(cronExpression));
-                }
+			// cron express 저장
+			batchDAO.insertTrigger(jobKey.getGroup(), jobKey.getName(), jobDataMap.toString(), cronExpression);
 
-            }
-        } catch (SchedulerException e) {
-            BatchAdminLogger.getLogger().error(e.getMessage(), e);
-        }
-        return message;
-    }
+			BatchAdminLogger.getLogger().info("Job is scheduled");
+		} catch (SchedulerException e) {
+			BatchAdminLogger.getLogger().error(e.getMessage(), e);
+		}
+	}
 
-    /**
-     *
-     * @param jobName
-     * @return String
-     */
-    public String getScheduledJobStatus(String jobName) {
-        String returnVal = Constants.JOB_IS_NOT_SCHEDULED;
-        JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
+	/**
+	 *
+	 * @param jobName
+	 * @return String
+	 */
+	public String getScheduledJobDescription(String jobName) {
+		String message = Constants.JOB_IS_NOT_SCHEDULED;
+		JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
+		try {
+			JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
+			if (null != jobDetail) {
+				List<? extends Trigger> triggersOfJob = schedulerFactory.getScheduler().getTriggersOfJob(jobKey);
+				if (null != triggersOfJob && !triggersOfJob.isEmpty()) {
+					CronTrigger trigger = (CronTrigger) triggersOfJob.get(0);
+					String cronExpression = trigger.getCronExpression();
+					CronDescriptor descriptor = CronDescriptor.instance(Locale.US);
+					CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(QUARTZ));
+					message = descriptor.describe(parser.parse(cronExpression));
+				}
 
-        try {
-            JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
-            if (null != jobDetail) {
+			}
+		} catch (SchedulerException e) {
+			BatchAdminLogger.getLogger().error(e.getMessage(), e);
+		}
+		return message;
+	}
 
-                returnVal = Constants.JOB_IS_SCHEDULED;
-            }
-        } catch (SchedulerException e) {
-            BatchAdminLogger.getLogger().error(e.getMessage(), e);
-        }
+	/**
+	 *
+	 * @param jobName
+	 * @return String
+	 */
+	public String getScheduledJobStatus(String jobName) {
+		String returnVal = Constants.JOB_IS_NOT_SCHEDULED;
+		JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
 
-        return returnVal;
-    }
+		try {
+			JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
+			if (null != jobDetail) {
 
-    /**
-     *
-     * @param jobName
-     */
-    public void unScheduleBatchJob(String jobName) {
-        // Delete job, if existing
-        JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
-        try {
-            JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
-            if (null != jobDetail) {
-                schedulerFactory.getScheduler().deleteJob(jobKey);
-            }
-        } catch (SchedulerException e) {
-            BatchAdminLogger.getLogger().error(e.getMessage(), e);
-        }
-    }
+				returnVal = Constants.JOB_IS_SCHEDULED;
+			}
+		} catch (SchedulerException e) {
+			BatchAdminLogger.getLogger().error(e.getMessage(), e);
+		}
 
-    public void setSchedulerFactory(SchedulerFactoryBean schedulerFactory) {
-        this.schedulerFactory = schedulerFactory;
-    }
+		return returnVal;
+	}
+
+	/**
+	 *
+	 * @param jobName
+	 */
+	public void unScheduleBatchJob(String jobName) {
+		// Delete job, if existing
+		JobKey jobKey = new JobKey(jobName, Constants.QUARTZ_GROUP);
+		try {
+			JobDetail jobDetail = schedulerFactory.getScheduler().getJobDetail(jobKey);
+			if (null != jobDetail) {
+				schedulerFactory.getScheduler().deleteJob(jobKey);
+			}
+		} catch (SchedulerException e) {
+			BatchAdminLogger.getLogger().error(e.getMessage(), e);
+		}
+	}
+
+	public void setSchedulerFactory(SchedulerFactoryBean schedulerFactory) {
+		this.schedulerFactory = schedulerFactory;
+	}
 }
