@@ -80,6 +80,9 @@ public class QuartzServiceImpl implements QuartzService {
 
             // Schedule job
             schedulerFactory.getScheduler().scheduleJob(jobDetail, trigger);
+            
+            //cron express 저장
+            
 
             BatchAdminLogger.getLogger().info("Job is scheduled");
         } catch (SchedulerException e) {
