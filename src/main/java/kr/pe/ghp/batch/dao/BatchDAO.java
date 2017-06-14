@@ -1,4 +1,4 @@
-package kr.ghp.batch.dao;
+package kr.pe.ghp.batch.dao;
 
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 

@@ -19,7 +19,7 @@ import com.cronutils.descriptor.CronDescriptor;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 
-import kr.ghp.batch.dao.BatchDAO;
+import kr.pe.ghp.batch.dao.BatchDAO;
 
 import org.quartz.*;
 import org.springframework.batch.admin.web.JobLauncherDetails;
