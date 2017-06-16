@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<description>contents to elasticsearch</description>
+	
+	<job id="contentsToEsJob" xmlns="http://www.springframework.org/schema/batch">
+		<step id="step1">
+			<tasklet>
+				<chunk reader="pagingItemReader" writer="esWriter" commit-interval="100"/>
+			</tasklet>
+		</step>
+	</job>
+	
+	<bean id="pagingItemReader" class="org.springframework.batch.item.database.JdbcPagingItemReader" scope="step">
+		<property name="dataSource" ref="webDataSource"/>
+		<property name="queryProvider">
+			<bean class="org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean">
+				<property name="dataSource" ref="dataSource1"/>
+				<property name="selectClause" value="select * "/>
+				<property name="fromClause" value="
+					from
+					(
+					select es.obj_id, es.id, es.prcYN, es.regDate, es.prcDate, es.type, li.title, li.content, li.category
+					from es_target es left join life li on es.id = li.seq
+					where es.prcYN = 'N' 
+					limit 100
+					) a
+				"/>
+				<property name="sortKey" value="regDate"/>
+			</bean>
+		</property>
+		<property name="pageSize" value="100"/>
+		<property name="rowMapper">
+			<bean class="kr.pe.ghp.batch.rowmapper.RowToMapMapper"/>
+		</property>
+	</bean>
+	
+	<bean id="esWriter" class="kr.pe.ghp.batch.rpw.contents.ContentEsWriter" scope="step"/>
+</beans>

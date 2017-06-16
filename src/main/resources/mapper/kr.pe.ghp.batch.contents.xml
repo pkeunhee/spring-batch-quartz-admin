@@ -3,10 +3,8 @@
 
 <mapper namespace="kr.pe.ghp.batch.mapper.ContentsMapper">
 	<update id="updateProcessed">
-<!-- 		UPDATE es_target  -->
-<!-- 		SET prcYN = 'Y', prcDate = now()  -->
-<!-- 		WHERE obj_id = 1 AND id in <foreach collection="list" item="item" index="index" separator="," open="(" close=")">#{item.value}</foreach> -->
-		select 1
-
+		UPDATE es_target 
+		SET prcYN = 'Y', prcDate = now() 
+		WHERE obj_id = 1 AND id in <foreach collection="list" item="item" index="index" separator="," open="(" close=")">#{item}</foreach>
 	</update>
 </mapper>

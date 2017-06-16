@@ -29,6 +29,7 @@
                 <value>classpath:batch-mysql.properties</value>
                 <value>classpath:log4j.properties</value>
                 <value>classpath:web-jdbc.properties</value>
+                <value>classpath:data.properties</value>
             </list>
         </property>
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
@@ -63,40 +64,4 @@
         <property name="tablePrefix" value="${batch.table.prefix}"/>
         <property name="dataSource" ref="dataSource"/>
     </bean>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <bean id="batchDAO" class="kr.pe.ghp.batch.dao.BatchDAO">
-    	<property name="dataSource" ref="dataSource"/>
-    </bean>
-    
-	<bean id="webDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-		<property name="driverClassName" value="${jdbc.web.driverClassName}" />
-		<property name="url" value="${jdbc.web.url}" />
-		<property name="username" value="${jdbc.web.username}" />
-		<property name="password" value="${jdbc.web.password}" />
-		<!-- 유효 검사용 쿼리(1개 이상의 row를 반환하는 쿼리를 넣어주면 됨) -->
-		<property name="validationQuery" value="select 1" />
-		<!-- 컨넥션이 놀고 있을때 validationQuery 를 이용해서 유효성 검사를 할지 여부 -->
-		<property name="testWhileIdle" value="true" />
-		<!-- 해당 밀리초마다 validationQuery 를 이용하여 유효성 검사 진행 -->
-		<property name="timeBetweenEvictionRunsMillis" value="7200000" />
-	</bean>
-    
-	<bean id="webSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-		<property name="dataSource" ref="webDataSource" />
-		<property name="mapperLocations" value="classpath:mapper/*.xml" />
-		<property name="configLocation" value="classpath:mybatis-config.xml"/>
-	</bean>
-    
-	<bean id="webMapper" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<property name="basePackage" value="kr.pe.ghp.batch.mapper" /> <!-- mapper 객체 설정 -->
-		<property name="sqlSessionFactoryBeanName" value="webSqlSessionFactory" />
-	</bean>
 </beans>
