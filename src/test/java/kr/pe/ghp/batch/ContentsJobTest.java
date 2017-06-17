@@ -17,7 +17,7 @@ public class ContentsJobTest extends BaseTestCase {
 	JobLauncher jobLauncher;
 
 	@Autowired
-	@Qualifier("sample-batch")
+	@Qualifier("contentsToEsJob")
 	Job job;
 	
 	@Test

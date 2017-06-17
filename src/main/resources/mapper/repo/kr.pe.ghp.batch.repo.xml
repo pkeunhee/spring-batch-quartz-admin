@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="kr.pe.ghp.batch.mapper.repo.BatchRepoMapper">
+	<insert id="insertTrigger">
+		insert into cron_details
+		(GROUP_NAME, JOB_NAME, JOB_PARAMS, CRON_EXP)
+		values
+		(#{groupName}, #{jobName}, #{jobParams}, #{cronExp})
+		on duplicate key update JOB_PARAMS = #{jobParams}, CRON_EXP = #{cronExp}
+	</insert>
+</mapper>

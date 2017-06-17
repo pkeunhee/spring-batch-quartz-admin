@@ -19,7 +19,7 @@ import com.cronutils.descriptor.CronDescriptor;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 
-import kr.pe.ghp.batch.dao.BatchDAO;
+import kr.pe.ghp.batch.mapper.repo.BatchRepoMapper;
 
 import org.quartz.*;
 import org.springframework.batch.admin.web.JobLauncherDetails;
@@ -50,7 +50,7 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Qualifier("quartzService")
 public class QuartzServiceImpl implements QuartzService {
 	@Autowired
-	private BatchDAO batchDAO;
+	private BatchRepoMapper repoMapper;
 
 	/**
 	 * Scheduler instance
@@ -88,7 +88,7 @@ public class QuartzServiceImpl implements QuartzService {
 			schedulerFactory.getScheduler().scheduleJob(jobDetail, trigger);
 
 			// cron express 저장
-			batchDAO.insertTrigger(jobKey.getGroup(), jobKey.getName(), jobDataMap.toString(), cronExpression);
+			repoMapper.insertTrigger(jobKey.getGroup(), jobKey.getName(), jobDataMap.toString(), cronExpression);
 
 			BatchAdminLogger.getLogger().info("Job is scheduled");
 		} catch (SchedulerException e) {

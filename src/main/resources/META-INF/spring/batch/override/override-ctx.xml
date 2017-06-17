@@ -3,17 +3,28 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns="http://www.springframework.org/schema/beans"
+       xmlns:task="http://www.springframework.org/schema/task"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
                            http://www.springframework.org/schema/beans/spring-beans.xsd
 	                       http://www.springframework.org/schema/context
                            http://www.springframework.org/schema/context/spring-context.xsd
                            http://www.springframework.org/schema/tx
-                           http://www.springframework.org/schema/tx/spring-tx.xsd">
+                           http://www.springframework.org/schema/tx/spring-tx.xsd
+                           http://www.springframework.org/schema/task
+                           http://www.springframework.org/schema/task/spring-task-3.0.xsd">
 
    
 	<!-- root context 에서 bean으로 등록될 객체 지정 -->
-	<context:component-scan base-package="kr.pe.ghp.batch.service"/>
+	<context:component-scan base-package="kr.pe.ghp.batch"/>
    
+   
+    <task:scheduler id="scheduler" pool-size="10"/> <!-- pool-size attribute optional -->
+ 
+<!--     <task:scheduled-tasks scheduler="scheduler"> scheduled job list -->
+<!--         <task:scheduled ref="testJob" method="executeJob" cron="0/1 * * * * ?"/> 주기 설정 속성 : fixed-rate, fixed-delay, cron -->
+<!--         add more job here -->
+<!--     </task:scheduled-tasks> -->
+
    
     <!-- Enable annotations-->
     <context:annotation-config/>
@@ -29,7 +40,7 @@
                 <value>classpath:batch-mysql.properties</value>
                 <value>classpath:log4j.properties</value>
                 <value>classpath:web-jdbc.properties</value>
-                <value>classpath:data.properties</value>
+                <value>classpath:data1.properties</value>
             </list>
         </property>
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
