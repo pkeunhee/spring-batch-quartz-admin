@@ -6,10 +6,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,6 +17,8 @@ import io.searchbox.core.Delete;
 import io.searchbox.core.DocumentResult;
 import io.searchbox.core.Index;
 import kr.pe.ghp.batch.service.ContentsService;
+import kr.pe.ghp.batch.util.PropertiesUtils;
+import kr.pe.ghp.batch.util.SpringContextHolder;
 
 /**
  * @author geunhui park
@@ -28,20 +26,13 @@ import kr.pe.ghp.batch.service.ContentsService;
 public class ContentEsWriter implements ItemWriter<Map<String, String>> {
 	private static Logger logger = LoggerFactory.getLogger(ContentEsWriter.class);
 
-	@Value("${es.url}")
-	private String URL_ES;
-
-	@Value("${es.index.contents}")
-	private String INDEX;
-
-	@Autowired
-	private ContentsService contentsService;
+	private String URL_ES = PropertiesUtils.getProperty("es.url");
+	private String INDEX = PropertiesUtils.getProperty("es.index.contents");
 
 	@Override
 	public void write(List<? extends Map<String, String>> items) throws Exception {
 		logger.debug("write start");
 
-		// String index = "contents_dev";
 		String type = "life";
 
 		List<String> idList = Lists.newArrayList();
@@ -79,6 +70,7 @@ public class ContentEsWriter implements ItemWriter<Map<String, String>> {
 		}
 
 		// 처리 완료로 업데이트
+		ContentsService contentsService = SpringContextHolder.getBean(ContentsService.class);
 		contentsService.updateProcessed(idList);
 	}
 
