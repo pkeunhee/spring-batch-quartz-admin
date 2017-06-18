@@ -19,8 +19,7 @@
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
     <!-- static way 로도 key, value 가져올수 있게 overrided -->
-    <bean id="placeholderProperties"
-          class="kr.pe.ghp.batch.util.PropertiesUtils">
+    <bean id="placeholderProperties" class="kr.pe.ghp.batch.util.PropertiesUtils">
         <property name="locations">
             <list>
                 <value>classpath:/org/springframework/batch/admin/bootstrap/batch.properties</value>
@@ -28,7 +27,7 @@
                 <value>classpath:batch-mysql.properties</value>
                 <value>classpath:log4j.properties</value>
                 <value>classpath:web-jdbc.properties</value>
-                <value>classpath:data1.properties</value>
+                <value>classpath:data.properties</value>
             </list>
         </property>
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
@@ -38,8 +37,7 @@
     </bean>
 
     <!-- Overrider job repository -->
-    <bean id="jobRepository"
-          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+    <bean id="jobRepository" class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
         <property name="databaseType" value="mysql"/>
         <property name="dataSource" ref="dataSource"/>
         <property name="tablePrefix" value="${batch.table.prefix}"/>
@@ -58,8 +56,7 @@
     </bean>
 
     <!-- Override job explorer -->
-    <bean id="jobExplorer"
-          class="org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
+    <bean id="jobExplorer" class="org.springframework.batch.core.explore.support.JobExplorerFactoryBean">
         <property name="tablePrefix" value="${batch.table.prefix}"/>
         <property name="dataSource" ref="dataSource"/>
     </bean>

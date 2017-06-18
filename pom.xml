@@ -16,17 +16,36 @@ limitations under the License.
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>spring.batch.quartz.admin</groupId>
-    <artifactId>spring-batch-quartz-admin</artifactId>
+    <groupId>kr.pe.ghp</groupId>
+    <artifactId>batch-admin-ghp</artifactId>
     <packaging>war</packaging>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>spring-batch-quartz-admin</name>
-    <url>http://maven.apache.org</url>
+    <version>1.0.0</version>
+    
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.test.skip>true</maven.test.skip> <!-- 빌드시 test 수행 생략 -->
     </properties>
+    
+	<profiles>
+		<profile>
+			<id>local</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<deploy.phase>local</deploy.phase>
+			</properties>
+		</profile>
+		<profile>
+			<id>release</id>
+			<properties>
+				<deploy.phase>release</deploy.phase>
+			</properties>
+		</profile>
+	</profiles>    
+    
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -143,6 +162,46 @@ limitations under the License.
     </dependencies>
     
     <build>
-        <finalName>spring-batch-quartz-admin</finalName>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copyWeb</id>
+						<phase>package</phase>
+						<configuration>
+							<!-- target 에 있는 웹디렉토리를 web으로 복사 시킴. -->
+							<tasks>
+								<!-- lib에 custom 으로 추가된 jar 파일들 추가 시켜 줌 -->
+								<copy todir="target/${project.build.finalName}/WEB-INF/lib" verbose="true">
+									<fileset dir="lib" includes="**/*"/>
+								</copy>
+								<delete verbose="true">
+									<fileset dir="${basedir}" includes="web/**" />
+								</delete>
+								<mkdir dir="web"/>
+								<copy todir="web" verbose="true">
+									<fileset dir="target/${project.build.finalName}" includes="**/*" />
+								</copy>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>    
+    
+		<resources>
+			<resource>
+				<directory>src/main/resources-env/${deploy.phase}</directory>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+    
+        <finalName>${artifactId}</finalName>
     </build>
 </project>

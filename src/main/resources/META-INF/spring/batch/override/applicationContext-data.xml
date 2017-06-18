@@ -11,7 +11,6 @@
                            http://www.springframework.org/schema/tx
                            http://www.springframework.org/schema/tx/spring-tx.xsd
                            http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
-
    
 	<bean id="webDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="${jdbc.web.driverClassName}" />
@@ -32,23 +31,12 @@
 		<property name="configLocation" value="classpath:mybatis-config.xml"/>
 	</bean>
     
-<!-- 	<bean id="webScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer"> -->
-<!-- 		<property name="basePackage" value="kr.pe.ghp.batch.mapper.web" /> mapper 객체 설정 -->
-<!-- 		<property name="sqlSessionFactoryBeanName" value="webSqlSessionFactory" /> -->
-<!-- 	</bean> -->
-	
 	<bean id="repoSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 		<property name="mapperLocations" value="classpath:mapper/repo/*.xml" />
 		<property name="configLocation" value="classpath:mybatis-config.xml"/>
 	</bean>
     
-<!-- 	<bean id="repoScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer"> -->
-<!-- 		<property name="basePackage" value="kr.pe.ghp.batch.mapper" /> mapper 객체 설정 -->
-<!-- 		<property name="sqlSessionFactoryBeanName" value="repoSqlSessionFactory" /> -->
-<!-- 	</bean> -->
-	
 	<mybatis:scan base-package="kr.pe.ghp.batch.mapper.repo" factory-ref="repoSqlSessionFactory"/>
 	<mybatis:scan base-package="kr.pe.ghp.batch.mapper.web" factory-ref="webSqlSessionFactory"/>
-	
 </beans>
