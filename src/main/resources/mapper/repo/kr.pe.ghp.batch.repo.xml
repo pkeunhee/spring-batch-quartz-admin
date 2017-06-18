@@ -2,6 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 
 <mapper namespace="kr.pe.ghp.batch.mapper.repo.BatchRepoMapper">
+	<resultMap id="mapCronDetails" type="kr.pe.ghp.batch.model.CronDetails">
+		<result column="group_name" property="groupName"/>
+		<result column="job_name" property="jobName"/>
+		<result column="job_params" property="jobParams"/>
+		<result column="cron_exp" property="cronExp"/>
+	</resultMap>
+
 	<insert id="insertTrigger">
 		insert into cron_details
 		(GROUP_NAME, JOB_NAME, JOB_PARAMS, CRON_EXP)
@@ -9,4 +16,11 @@
 		(#{groupName}, #{jobName}, #{jobParams}, #{cronExp})
 		on duplicate key update JOB_PARAMS = #{jobParams}, CRON_EXP = #{cronExp}
 	</insert>
+	
+	<select id="selectCronDetails" resultMap="mapCronDetails">
+		select group_name, job_name, job_params, cron_exp 
+		from cron_details 
+		where group_name = #{groupName} 
+		and job_name = #{jobName} 
+	</select>
 </mapper>

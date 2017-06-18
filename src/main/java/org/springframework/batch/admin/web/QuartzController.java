@@ -15,6 +15,15 @@
  */
 package org.springframework.batch.admin.web;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.apache.commons.lang.StringUtils;
 import org.quartz.CronExpression;
 import org.springframework.batch.admin.service.JobService;
@@ -35,194 +44,200 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
-import java.util.*;
+import kr.pe.ghp.batch.service.BatchRepoService;
 
 @Controller
 public class QuartzController {
 
-    /**
-     * Quartz service instance
-     */
-    @Autowired
-    private QuartzService quartzService;
+	/**
+	 * Quartz service instance
+	 */
+	@Autowired
+	private QuartzService quartzService;
 
-    /**
-     * Job service instance
-     */
-    @Autowired
-    private JobService jobService;
+	/**
+	 * Job service instance
+	 */
+	@Autowired
+	private JobService jobService;
 
-    /**
-     * Timezone
-     */
-    private TimeZone timeZone = TimeZone.getDefault();
+	/**
+	 * Timezone
+	 */
+	private TimeZone timeZone = TimeZone.getDefault();
 
-    /**
-     * Extensions
-     */
-    private Collection<String> extensions = new HashSet<String>();
+	/**
+	 * Extensions
+	 */
+	private Collection<String> extensions = new HashSet<String>();
 
-    /**
-     * Job parameters extractor
-     */
-    private JobParametersExtractor jobParametersExtractor = new JobParametersExtractor();
+	/**
+	 * Job parameters extractor
+	 */
+	private JobParametersExtractor jobParametersExtractor = new JobParametersExtractor();
 
-    public QuartzController() {
-        extensions.addAll(Arrays.asList(".html", ".json", ".rss"));
-    }
+	@Autowired
+	private BatchRepoService batchRepoService;
 
-    /**
-     * A collection of extensions that may be appended to request urls aimed at this controller.
-     *
-     * @param extensions the extensions (e.g. [rss, xml, atom])
-     */
-    public void setExtensions(Collection<String> extensions) {
-        this.extensions = new LinkedHashSet<String>(extensions);
-    }
+	public QuartzController() {
+		extensions.addAll(Arrays.asList(".html", ".json", ".rss"));
+	}
 
-    public void setTimeZone(TimeZone timeZone) {
-        this.timeZone = timeZone;
-    }
+	/**
+	 * A collection of extensions that may be appended to request urls aimed at this controller.
+	 *
+	 * @param extensions
+	 *            the extensions (e.g. [rss, xml, atom])
+	 */
+	public void setExtensions(Collection<String> extensions) {
+		this.extensions = new LinkedHashSet<String>(extensions);
+	}
 
-    /**
-     * <p>
-     * Displays the list of registered jobs on the Quartz menu page
-     * </p>
-     *
-     * @param model
-     * @param startJob
-     * @param pageSize
-     */
-    @RequestMapping(value = "/quartz", method = RequestMethod.GET)
-    public void quartzJobs(ModelMap model, @RequestParam(defaultValue = "0") int startJob, @RequestParam(defaultValue = "20") int pageSize) {
-        int total = jobService.countJobs();
-        TableUtils.addPagination(model, total, startJob, pageSize, "QuartzJob");
-        Collection<String> names = jobService.listJobs(startJob, pageSize);
-        List<JobInfo> quartzJobs = new ArrayList<JobInfo>();
-        for (String name : names) {
-            int count = 0;
-            try {
-                count = jobService.countJobExecutionsForJob(name);
-            } catch (NoSuchJobException e) {
-                // shouldn't happen
-            }
-            boolean launchable = jobService.isLaunchable(name);
-            boolean incrementable = jobService.isIncrementable(name);
-            quartzJobs.add(new JobInfo(name, count, null, launchable, incrementable));
-        }
-        model.addAttribute("quartzJobs", quartzJobs);
-    }
+	public void setTimeZone(TimeZone timeZone) {
+		this.timeZone = timeZone;
+	}
 
-    /**
-     * <p>
-     * Displays the details page for each of the quartz jobs
-     * </p>
-     *
-     * @param model
-     * @param quartzJobName
-     * @param errors
-     * @param startJobInstance
-     * @param pageSize
-     * @return String
-     */
-    @RequestMapping(value = "/quartz/{quartzJobName}", method = RequestMethod.GET)
-    public String quartzJobDetails(ModelMap model, @ModelAttribute("quartzJobName") String quartzJobName, Errors errors, @RequestParam(defaultValue = "0") int startJobInstance,
-                                   @RequestParam(defaultValue = "20") int pageSize) {
+	/**
+	 * <p>
+	 * Displays the list of registered jobs on the Quartz menu page
+	 * </p>
+	 *
+	 * @param model
+	 * @param startJob
+	 * @param pageSize
+	 */
+	@RequestMapping(value = "/quartz", method = RequestMethod.GET)
+	public void quartzJobs(ModelMap model, @RequestParam(defaultValue = "0") int startJob, @RequestParam(defaultValue = "20") int pageSize) {
+		int total = jobService.countJobs();
+		TableUtils.addPagination(model, total, startJob, pageSize, "QuartzJob");
+		Collection<String> names = jobService.listJobs(startJob, pageSize);
+		List<JobInfo> quartzJobs = new ArrayList<JobInfo>();
+		for (String name : names) {
+			int count = 0;
+			try {
+				count = jobService.countJobExecutionsForJob(name);
+			} catch (NoSuchJobException e) {
+				// shouldn't happen
+			}
+			boolean launchable = jobService.isLaunchable(name);
+			boolean incrementable = jobService.isIncrementable(name);
+			quartzJobs.add(new JobInfo(name, count, null, launchable, incrementable));
+		}
+		model.addAttribute("quartzJobs", quartzJobs);
+	}
 
-        boolean launchable = jobService.isLaunchable(quartzJobName);
+	/**
+	 * <p>
+	 * Displays the details page for each of the quartz jobs
+	 * </p>
+	 *
+	 * @param model
+	 * @param quartzJobName
+	 * @param errors
+	 * @param startJobInstance
+	 * @param pageSize
+	 * @return String
+	 */
+	@RequestMapping(value = "/quartz/{quartzJobName}", method = RequestMethod.GET)
+	public String quartzJobDetails(ModelMap model, @ModelAttribute("quartzJobName") String quartzJobName, Errors errors, @RequestParam(defaultValue = "0") int startJobInstance,
+		@RequestParam(defaultValue = "20") int pageSize) {
 
-        try {
+		boolean launchable = jobService.isLaunchable(quartzJobName);
 
-            Collection<JobInstance> result = jobService.listJobInstances(quartzJobName, startJobInstance, pageSize);
-            Collection<JobInstanceInfo> jobInstances = new ArrayList<JobInstanceInfo>();
-            model.addAttribute("quartzJobParameters", jobParametersExtractor.fromJobParameters(jobService.getLastJobParameters(quartzJobName)));
+		try {
+			Collection<JobInstance> result = jobService.listJobInstances(quartzJobName, startJobInstance, pageSize);
+			Collection<JobInstanceInfo> jobInstances = new ArrayList<JobInstanceInfo>();
+			model.addAttribute("quartzJobParameters", jobParametersExtractor.fromJobParameters(jobService.getLastJobParameters(quartzJobName)));
 
-            for (JobInstance jobInstance : result) {
-                Collection<JobExecution> jobExecutions = jobService.getJobExecutionsForJobInstance(quartzJobName, jobInstance.getId());
-                jobInstances.add(new JobInstanceInfo(jobInstance, jobExecutions, timeZone));
-            }
+			for (JobInstance jobInstance : result) {
+				Collection<JobExecution> jobExecutions = jobService.getJobExecutionsForJobInstance(quartzJobName, jobInstance.getId());
+				jobInstances.add(new JobInstanceInfo(jobInstance, jobExecutions, timeZone));
+			}
 
-            model.addAttribute("quartzJobInstances", jobInstances);
-            int total = jobService.countJobInstances(quartzJobName);
-            TableUtils.addPagination(model, total, startJobInstance, pageSize, "QuartzJobInstance");
-            int count = jobService.countJobExecutionsForJob(quartzJobName);
-            model.addAttribute("quartzJobInfo", new JobInfo(quartzJobName, count, launchable, jobService.isIncrementable(quartzJobName)));
-            model.addAttribute("jobMessageStatus", quartzService.getScheduledJobStatus(quartzJobName));
-            model.addAttribute("jobMessageDescription", quartzService.getScheduledJobDescription(quartzJobName));
+			model.addAttribute("quartzJobInstances", jobInstances);
+			int total = jobService.countJobInstances(quartzJobName);
+			TableUtils.addPagination(model, total, startJobInstance, pageSize, "QuartzJobInstance");
+			int count = jobService.countJobExecutionsForJob(quartzJobName);
+			model.addAttribute("quartzJobInfo", new JobInfo(quartzJobName, count, launchable, jobService.isIncrementable(quartzJobName)));
+			model.addAttribute("jobMessageStatus", quartzService.getScheduledJobStatus(quartzJobName));
+			model.addAttribute("jobMessageDescription", quartzService.getScheduledJobDescription(quartzJobName));
 
-        } catch (NoSuchJobException e) {
-            errors.reject("no.such.job", new Object[]{quartzJobName}, "There is no such job (" + HtmlUtils.htmlEscape(quartzJobName) + ")");
-        }
+			model.addAttribute("cronDetails", batchRepoService.getCronDetails(Constants.QUARTZ_GROUP, quartzJobName));
+		} catch (NoSuchJobException e) {
+			errors.reject("no.such.job", new Object[] { quartzJobName }, "There is no such job (" + HtmlUtils.htmlEscape(quartzJobName) + ")");
+		}
 
-        return "quartz/job";
-    }
+		return "quartz/job";
+	}
 
-    /**
-     * <p>
-     * Schedules the job using the quartz
-     * </p>
-     *
-     * @param model
-     * @param quartzJobName
-     * @param quartzScheduleRequest
-     * @param errors
-     * @param origin
-     * @return String
-     */
-    @RequestMapping(value = "/quartz/{quartzJobName}", method = RequestMethod.POST)
-    public String scheduleQuartzJob(ModelMap model, @ModelAttribute("quartzJobName") String quartzJobName, @ModelAttribute("quartzScheduleRequest") QuartzScheduleRequest quartzScheduleRequest,
-                                    Errors errors, @RequestParam(defaultValue = "execution") String origin) {
+	/**
+	 * <p>
+	 * Schedules the job using the quartz
+	 * </p>
+	 *
+	 * @param model
+	 * @param quartzJobName
+	 * @param quartzScheduleRequest
+	 * @param errors
+	 * @param origin
+	 * @return String
+	 */
+	@RequestMapping(value = "/quartz/{quartzJobName}", method = RequestMethod.POST)
+	public String scheduleQuartzJob(ModelMap model, @ModelAttribute("quartzJobName") String quartzJobName, @ModelAttribute("quartzScheduleRequest") QuartzScheduleRequest quartzScheduleRequest,
+		Errors errors, @RequestParam(defaultValue = "execution") String origin) {
 
-        if (Constants.ACTION_SCHEDULE.equalsIgnoreCase(quartzScheduleRequest.getAction())) {
+		if (Constants.ACTION_SCHEDULE.equalsIgnoreCase(quartzScheduleRequest.getAction())) {
 
-            // Setting the job name
-            quartzScheduleRequest.setQuartzJobName(quartzJobName);
+			// Setting the job name
+			quartzScheduleRequest.setQuartzJobName(quartzJobName);
 
-            // Validate the cron expression
-            if (!CronExpression.isValidExpression(quartzScheduleRequest.getCronExpression())) {
-                errors.reject("invalid.cron.expression", "Please enter a valid cron expression.i.e. * * * * * ? ");
-            }
+			// Validate the cron expression
+			if (!CronExpression.isValidExpression(quartzScheduleRequest.getCronExpression())) {
+				errors.reject("invalid.cron.expression", "Please enter a valid cron expression.i.e. * * * * * ? ");
+			}
 
-            // Validate the job parameters
-            if (StringUtils.isNotBlank(quartzScheduleRequest.getQuartzJobParameters()) && (!Util.isValidRegExp(Constants.JOB_PARAMETERS_REGEX, quartzScheduleRequest.getQuartzJobParameters()))) {
-                errors.reject("invalid.job.parameters", "Invalid Job Parameters (use comma or new-line separator)");
-            }
+			// Validate the job parameters
+			if (StringUtils.isNotBlank(quartzScheduleRequest.getQuartzJobParameters()) && (!Util.isValidRegExp(Constants.JOB_PARAMETERS_REGEX, quartzScheduleRequest.getQuartzJobParameters()))) {
+				errors.reject("invalid.job.parameters", "Invalid Job Parameters (use comma or new-line separator)");
+			}
 
-            if (!errors.hasErrors()) {
+			if (!errors.hasErrors()) {
 
-                // Fetching the parameters
-                String params = quartzScheduleRequest.getQuartzJobParameters();
-                Map<String, Object> jobDataMap = Util.extractJobDataMap(quartzJobName, params);
+				// Fetching the parameters
+				String params = quartzScheduleRequest.getQuartzJobParameters();
+				Map<String, Object> jobDataMap = Util.extractJobDataMap(quartzJobName, params);
 
-                // Scheduling the batch job
-                quartzService.scheduleBatchJob(quartzJobName, quartzScheduleRequest.getCronExpression(), jobDataMap);
+				// Scheduling the batch job
+				quartzService.scheduleBatchJob(quartzJobName, quartzScheduleRequest.getCronExpression(), jobDataMap);
+			}
 
-            }
-        } else if (Constants.ACTION_UNSCHEDULE.equalsIgnoreCase(quartzScheduleRequest.getAction())) {
+			batchRepoService.addTrigger(Constants.QUARTZ_GROUP, quartzJobName, quartzScheduleRequest.getQuartzJobParameters(), quartzScheduleRequest.getCronExpression());
 
-            // Un-schedule the batch job
-            quartzService.unScheduleBatchJob(quartzJobName);
-        }
+		} else if (Constants.ACTION_UNSCHEDULE.equalsIgnoreCase(quartzScheduleRequest.getAction())) {
 
-        // Scheduling the job using Quartz
-        if (!"quartzJob".equals(origin)) {
-            // if the origin is not specified we are probably not a UI client
-            return "jobs/execution";
-        } else {
-            // In the UI we show the same page again...
-            return quartzJobDetails(model, quartzJobName, errors, 0, 20);
-        }
+			// Un-schedule the batch job
+			quartzService.unScheduleBatchJob(quartzJobName);
+		}
 
-        // Not a redirect because normally it is requested by an Ajax call so
-        // there's less of a pressing need for one (the browser history won't
-        // contain the request).
-    }
+		// Scheduling the job using Quartz
+		if (!"quartzJob".equals(origin)) {
+			// if the origin is not specified we are probably not a UI client
+			return "jobs/execution";
+		} else {
+			// In the UI we show the same page again...
+			return quartzJobDetails(model, quartzJobName, errors, 0, 20);
+		}
 
-    public void setQuartzService(QuartzService quartzService) {
-        this.quartzService = quartzService;
-    }
+		// Not a redirect because normally it is requested by an Ajax call so
+		// there's less of a pressing need for one (the browser history won't
+		// contain the request).
+	}
 
-    public void setJobService(JobService jobService) {
-        this.jobService = jobService;
-    }
+	public void setQuartzService(QuartzService quartzService) {
+		this.quartzService = quartzService;
+	}
+
+	public void setJobService(JobService jobService) {
+		this.jobService = jobService;
+	}
 }

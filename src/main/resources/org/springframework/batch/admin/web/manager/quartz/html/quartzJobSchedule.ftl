@@ -27,9 +27,7 @@
 		<ol>
 			<li>
 			<label for="cronExpression">Cron Expression</label>
-			<input id="cronExpression" type="input" name="cronExpression" class="cronExpression">
-				<#if cronExpression??>${cronExpression}</#if>
-			</input>
+			<input id="cronExpression" type="input" name="cronExpression" class="cronExpression" value="${cronDetails.cronExp!}"/>
 			</li>
 		</ol>
 
