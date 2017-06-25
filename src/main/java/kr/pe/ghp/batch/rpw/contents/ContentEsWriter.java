@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.util.CollectionUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -69,9 +70,11 @@ public class ContentEsWriter implements ItemWriter<Map<String, String>> {
 			}
 		}
 
-		// 처리 완료로 업데이트
-		ContentsService contentsService = SpringContextHolder.getBean(ContentsService.class);
-		contentsService.updateProcessed(idList);
+		if (!CollectionUtils.isEmpty(idList)) {
+			// 처리 완료로 업데이트
+			ContentsService contentsService = SpringContextHolder.getBean(ContentsService.class);
+			contentsService.updateProcessed(idList);
+		}
 	}
 
 	private JestClient getClient() {
