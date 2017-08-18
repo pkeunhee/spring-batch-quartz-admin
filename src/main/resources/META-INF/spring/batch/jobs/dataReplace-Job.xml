@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<description>dataReplace</description>
+	
+	<job id="dataReplaceJob" xmlns="http://www.springframework.org/schema/batch">
+		<step id="step1">
+			<tasklet>
+				<chunk reader="pagingItemReader" processor="dataReplaceProcessor" writer="dataReplaceWriter" commit-interval="1000"/>
+			</tasklet>
+		</step>
+	</job>
+	
+	<bean id="pagingItemReader" class="org.springframework.batch.item.database.JdbcPagingItemReader" scope="step">
+		<property name="dataSource" ref="webDataSource"/>
+		<property name="queryProvider">
+			<bean class="org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean">
+				<property name="dataSource" ref="webDataSource"/>
+				<property name="selectClause" value="select * "/>
+				<property name="fromClause" value="
+					from life 
+					where content like '%temp%'
+					and regdate > '2017-01-09 00:02:24.0' 
+				"/>
+				<property name="sortKey" value="regDate"/>
+			</bean>
+		</property>
+		<property name="pageSize" value="1000"/>
+		<property name="rowMapper">
+			<bean class="kr.pe.ghp.batch.rowmapper.RowToMapMapper"/>
+		</property>
+	</bean>
+	
+	<bean id="dataReplaceProcessor" class="kr.pe.ghp.batch.rpw.contents.DataReplaceProcessor"/>
+	
+	<bean id="dataReplaceWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter" scope="step">
+		<property name="dataSource" ref="webDataSource"/>
+		<property name="sql">
+			<value>
+	 			<![CDATA[
+	 				update life set
+	 				content = :content
+	 				where seq = :seq
+	            ]]>				
+			</value>
+		</property>
+		<property name="itemSqlParameterSourceProvider">
+			<bean class="kr.pe.ghp.batch.rowmapper.MapSqlParameterSourceProvider"/>
+		</property>
+	</bean>
+</beans>
